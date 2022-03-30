@@ -19,14 +19,8 @@
 
 using point_t = std::vector<double>;
 
-enum AXIS{
-    X,
-    Y,
-    Z,
-};
-
 class KDNode{
-    using KDNodePtr = std::shared_ptr<KDNode>;
+using KDNodePtr = std::shared_ptr<KDNode>;
 public:
     int dim;            // 维数
     int split;
@@ -122,6 +116,36 @@ public:
         }
 
         return best->point;
+    }
+    void insert(point_t& point){ // 使用替罪羊树的方法动态插入节点
+        dim = point.size();
+        auto node_new = std::make_shared<KDNode>(point, 0, nullptr, nullptr);
+        nodes.push_back(node_new);
+        if(root == nullptr)
+            root = node_new;
+        else
+            insert(root, node_new);
+    }
+    
+private:
+    void insert(KDNodePtr& node, KDNodePtr& node_new){ // 使用替罪羊树的方法动态插入节点
+        if(node_new->point[node->split] <= node->point[node->split]){
+            if(node->left == nullptr){
+                node->left = node_new;
+            }
+            else{
+                insert(node->left, node_new);
+            }
+        }
+        else{
+            if(node->right == nullptr){
+                node->right = node_new;
+            }
+            else{
+                insert(node->right, node_new);
+            }
+        }
+
     }
 private:
     KDNodePtr make_tree(const std::vector<point_t>::iterator& begin,

@@ -21,14 +21,18 @@ int main(int argc, char** argv){
 
     // 构建KD-Tree
     auto startTime = clock();
-    KDTree kdtree(points);
+    // KDTree kdtree(points);
+    KDTree kdtree;
+    for(auto& point : points)
+        kdtree.insert(point);
+
     std::cout << "The building time is: " << get_s(startTime) << "s" << std::endl;
 
+    // 待查询点
     point_t point({rand_mimx(0, 1), rand_mimx(0, 1), rand_mimx(0, 1)});
-
+    std::cout << "input         : " << point[0] << " " << point[1] << " " << point[2] << std::endl;
     
     // 最近邻搜索
-    std::cout << "input         : " << point[0] << " " << point[1] << " " << point[2] << std::endl;
     std::cout << "----------- kdtree search -----------" << std::endl;
     startTime = clock();
     auto nearest = kdtree.get_nearest(point);
