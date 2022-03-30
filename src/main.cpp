@@ -17,15 +17,20 @@ int main(int argc, char** argv){
     for(int i = 0; i < 1000000; i++)
         points.push_back(point_t{rand_mimx(0, 1), rand_mimx(0, 1), rand_mimx(0, 1)});
 
+    std::cout << "total points: " << points.size() << std::endl;
+
+    // 构建KD-Tree
+    auto startTime = clock();
     KDTree kdtree(points);
+    std::cout << "The building time is: " << get_s(startTime) << "s" << std::endl;
 
     point_t point({rand_mimx(0, 1), rand_mimx(0, 1), rand_mimx(0, 1)});
 
     
-    std::cout << "total points: " << points.size() << std::endl;
+    // 最近邻搜索
     std::cout << "input         : " << point[0] << " " << point[1] << " " << point[2] << std::endl;
     std::cout << "----------- kdtree search -----------" << std::endl;
-    auto startTime = clock();
+    startTime = clock();
     auto nearest = kdtree.get_nearest(point);
     std::cout << "The run time is: " << get_s(startTime) << "s" << std::endl;
     std::cout << "nearest: " << nearest[0] << " " << nearest[1] << " " << nearest[2] << std::endl;
