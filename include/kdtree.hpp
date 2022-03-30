@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <memory>
 #include <cmath>
+#include <iostream>
 
 using point_t = std::vector<double>;
 
@@ -97,9 +98,9 @@ public:
         while(near_nodes.size() != 0){
             next = *(near_nodes.end() - 1);
             near_nodes.pop_back();
-
+            
             // 判断以查询点为球心的超球面与分割面是否相交
-            if(abs(point[next->split] - next->point[next->split]) < best_dist){
+            if(fabs(point[next->split] - next->point[next->split]) < best_dist){
                 // 相交则需要进入另一分支
                 if(point[next->split] <= next->point[next->split])
                     next = next->right;
