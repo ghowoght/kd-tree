@@ -24,13 +24,14 @@ using KDNodePtr = std::shared_ptr<KDNode>;
 public:
     int dim;            // 维数
     int split;
+    int count;          // 子节点总数
     point_t point;      
     KDNodePtr left;     // 左子树
     KDNodePtr right;    // 右子树
     KDNodePtr front;    // 父节点
 public:
     KDNode(point_t& point, int split, KDNodePtr left, KDNodePtr right)
-        : point(point), split(split), left(left), right(right){ }
+        : point(point), split(split), left(left), right(right), count(0){ }
 
 };
 
@@ -40,7 +41,7 @@ class KDTree{
 private:
     int dim;
     KDNodePtr root = nullptr;
-    std::vector<KDNodePtr> nodes;
+    double alpha = 0.8; // 不平衡度阈值，超过这个阈值就拍平重建
 
 public:
     KDTree()  = default;
@@ -56,17 +57,17 @@ public:
         root = make_tree(points.begin(), points.end(), points.size(), 0);
     }
 
-    point_t get_nearest_linear_search(const point_t& point){
-        auto best = nodes[0];
-        auto best_dist = get_distance(point, best->point);
-        for(auto& node : nodes){
-            auto curr_dist = get_distance(point, node->point);
+    point_t get_nearest_linear_search(const point_t& point, std::vector<point_t> points){
+        auto best = points[0];
+        auto best_dist = get_distance(point, best);
+        for(auto& p : points){
+            auto curr_dist = get_distance(point, p);
             if(curr_dist < best_dist){
-                best = node;
+                best = p;
                 best_dist = curr_dist;
             }
         }
-        return best->point;
+        return best;
     }
 
     point_t get_nearest(const point_t& point){
@@ -120,21 +121,23 @@ public:
     void insert(point_t& point){ // 使用替罪羊树的方法动态插入节点
         dim = point.size();
         auto node_new = std::make_shared<KDNode>(point, 0, nullptr, nullptr);
-        nodes.push_back(node_new);
         if(root == nullptr)
             root = node_new;
         else
             insert(root, node_new);
     }
-    
 private:
-    void insert(KDNodePtr& node, KDNodePtr& node_new){ // 使用替罪羊树的方法动态插入节点
+    void insert(KDNodePtr& node, KDNodePtr& node_new){
+        node->count++;
         if(node_new->point[node->split] <= node->point[node->split]){
             if(node->left == nullptr){
                 node->left = node_new;
             }
             else{
                 insert(node->left, node_new);
+            }
+            if(node->left->count > alpha * node->count){ // 不平衡，拍平重建
+                flat_rebuild(node);
             }
         }
         else{
@@ -144,9 +147,28 @@ private:
             else{
                 insert(node->right, node_new);
             }
+            if(node->right->count > alpha * node->count){ // 不平衡，拍平重建
+                flat_rebuild(node);
+            }
         }
 
     }
+
+    void flat_rebuild(KDNodePtr& node){
+        std::vector<point_t> points;
+        pre_order_traversal(node, points);
+
+        node = make_tree(points.begin(), points.end(), points.size(), node->split);
+    }
+    void pre_order_traversal(KDNodePtr& curr_node, std::vector<point_t>& points){
+        if(curr_node == nullptr) 
+            return;
+        points.push_back(curr_node->point);
+
+        pre_order_traversal(curr_node->left, points);
+        pre_order_traversal(curr_node->right, points);
+    }
+
 private:
     KDNodePtr make_tree(const std::vector<point_t>::iterator& begin,
                         const std::vector<point_t>::iterator& end,
@@ -166,7 +188,7 @@ private:
                         make_tree(begin, begin + mid, mid - 1, (split + 1) % dim),
                         make_tree(begin + mid + 1, end, length - mid - 1, (split + 1) % dim)
                         );
-        nodes.push_back(node);
+        node->count = length;
         return node;
     }
 
