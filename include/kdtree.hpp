@@ -64,7 +64,7 @@ public:
     point_t get_nearest_linear_search(const point_t& point){
         auto best = nodes[0];
         auto best_dist = get_distance(point, best->point);
-        for(auto node : nodes){
+        for(auto& node : nodes){
             auto curr_dist = get_distance(point, node->point);
             if(curr_dist < best_dist){
                 best = node;
@@ -147,7 +147,7 @@ private:
 
     inline double get_distance(const point_t& a, const point_t& b){
         double sum = 0;
-        for(int i = 0; i < a.size(); i++){
+        for(int i = 0; i < dim; i++){
             sum += (a[i] - b[i]) * (a[i] - b[i]);
         }
         return sqrt(sum);
