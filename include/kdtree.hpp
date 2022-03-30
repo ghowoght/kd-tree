@@ -131,7 +131,7 @@ private:
         if(begin == end) return nullptr;
 
         // 按照指定split进行排序(升序)
-        std::sort(begin, end, [split](point_t a, point_t b){return a[split] < b[split]; });
+        std::sort(begin, end, [split](point_t& a, point_t& b){ return a[split] < b[split]; });
 
         int mid = length / 2; // 中位数
 
