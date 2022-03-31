@@ -200,6 +200,44 @@ private:
         return sqrt(sum);
     }
 
+public:
+    // 用mermaid可视化节点树
+    void show_tree(){
+        std::vector<point_t> points;
+        pre_order_traversal(root, points);
+        for(auto& p : points)
+            std::cout << "(" << p[0] << "," << p[1] << "),";
+        std::cout << std::endl;
+        
+        std::cout << "graph TB" << std::endl;
+        show_tree(root);
+    }
+private:
+    void show_tree(KDNodePtr& node){
+        if(node == nullptr) 
+            return;
+        // 计算索引key
+        auto calc_key = [](KDNodePtr& node){
+            int key = 0;
+            for(int i = 0; i < node->point.size(); i++)
+                key += ((uint8_t)node->point[i] << (8 * i));
+            return key + node->count;
+        };
+        
+        std::cout << calc_key(node) << "((" << node->point[0];
+        for(int i = 1; i < node->point.size(); i++)
+            std::cout << "," << node->point[i];
+        std::cout << "))" << std::endl;
+        if(node->left != nullptr){
+            std::cout << calc_key(node) << "-->|split=" << node->split << "|"<< calc_key(node->left) << std::endl;
+            show_tree(node->left);
+        }
+        if(node->right != nullptr){
+            std::cout << calc_key(node) << "-->|split=" << node->split << "|"<< calc_key(node->right) << std::endl;
+            show_tree(node->right);
+        }
+    }
+
 };
 
 #endif
