@@ -76,19 +76,24 @@ public:
         auto best_dist = get_distance(point, best->point);
         std::vector<KDNodePtr> near_nodes;
         
-        // 从根节点往下搜寻，直到找到叶子节点
-        while(next != nullptr){
-            near_nodes.push_back(next);
-            auto next_dist = get_distance(point, next->point);
-            if(next_dist < best_dist){
-                best = next;
-                best_dist = next_dist;
+        // 搜索函数：以二分搜索的方式从当前节点搜索到叶子节点
+        auto search_to_leaf = [&](KDNodePtr& next){
+            while(next != nullptr){
+                near_nodes.push_back(next);
+                auto next_dist = get_distance(point, next->point);
+                if(next_dist < best_dist){
+                    best = next;
+                    best_dist = next_dist;
+                }
+                if(point[next->split] <= next->point[next->split])
+                    next = next->left;
+                else next = next->right;
             }
+        };
 
-            if(point[next->split] <= next->point[next->split])
-                next = next->left;
-            else next = next->right;
-        }
+        // 从根节点往下搜寻，直到找到叶子节点
+        search_to_leaf(next);
+        
         // 回溯
         while(near_nodes.size() != 0){
             next = *(near_nodes.end() - 1);
@@ -101,18 +106,7 @@ public:
                     next = next->right;
                 else next = next->left;
                 // 对另一子树进行搜寻，直到找到叶子节点
-                while(next != nullptr){
-                    near_nodes.push_back(next);
-                    auto next_dist = get_distance(point, next->point);
-                    if(next_dist < best_dist){
-                        best = next;
-                        best_dist = next_dist;
-                    }
-
-                    if(point[next->split] <= next->point[next->split])
-                        next = next->left;
-                    else next = next->right;   
-                }
+                search_to_leaf(next);
             }
         }
 
