@@ -151,15 +151,73 @@ def get_nearest(point): # point: 待查询点
     return nearest.value # 搜索完毕，返回最近邻
 ```
 
-### 搜索性能测试
+### 测试
 
+正确性测试：
 
+```
+1000000 points' building time is: 1.37681s
+input         : 0.191662 0.487925 0.026111
+----------- kdtree search -----------
+The run time is: 5e-06 s
+nearest: 0.187841 0.492951 0.0193923
+----------- linear search -----------
+The run time is: 0.032365 s
+nearest: 0.187841 0.492951 0.0193923
+```
+
+耗时测试：
+
+| ![image-20220408164033114](img/KD-Tree详解/image-20220408164033114.png) | ![image-20220408164109672](img/KD-Tree详解/image-20220408164109672.png) |
+| :----------------------------------------------------------: | :----------------------------------------------------------: |
+|             KD-Tree搜索耗时随数据规模的变化曲线              |       KD-Tree与线性搜索的处理耗时随数据规模的变化曲线        |
 
 ## 插入新节点
 
-在KD-Tree中，插入新节点也可以通过递归的方式完成。
+使用前述方法构建的KD-Tree实质上是一棵平衡树，这种平衡结构能使搜索效率提高至$O(logN)$。但是当数据集发送变化时，比如增加新节点或者删除节点时，很容易破坏这种平衡结构。想要保持平衡性，就需要重新调用一次构建函数，从头构建整个树结构，这虽然能保证平衡性，但是**相当耗时**。显然这是不可接受的，我们可以借鉴**替罪羊树**的思想来动态插入新节点，在快速插入新节点的同时**保证一定的树结构平衡度**，从而兼顾搜索效率和插入效率。
 
+替罪羊树是一种自平衡树，但它不是严格意义上的平衡树，而是允许一定的**失衡**，失衡的程度用一个常数$\alpha$表示，一般选择$\alpha=0.7$。当$max\{size(left),size(right)\}>\alpha \cdot size(this)$时，**重建整个子树**，被重建的子树的根节点就是“替罪羊”节点。虽然重构的代价较大，但是并不是每次插入新节点都会引发重构操作，所以使用这样一种**代价较大但是次数较少**的重构方式，平摊后插入新节点的时间复杂度为$O(logN)$。
 
+在KD-Tree中，插入新节点也可以通过递归的方式完成，不过需要在每次插入新节点后判断子树有没有失衡，再进行重构操作。Python伪代码如下：
 
-使用前述方法构建的KD-Tree实质上是一棵平衡树，这种平衡结构能使搜索效率提高至$O(logN)$。但是当数据集发送变化时，比如增加新节点或者删除节点时，很容易破坏这种平衡结构。想要保持平衡性，就需要重新调用一次构建函数，从头构建整个树结构，这虽然能保证平衡性，但是**相当耗时**。
+```python
+def insert(p): # p: 待插入点
+    if root == None:
+        root = Node(p, None, None, 0)
+    else:
+        insert(root, p)
 
+def insert(node, p):
+    node.count += 1
+    split = node.split
+    if p[split] <= node.value[split]:
+        if node.left == None:
+            node.left = Node(p, None, None, (split + 1) % dim)
+        else:
+            insert(node.left, p)
+        if node.left.count > alpha * node.count:
+            rebuild(node)
+    else:
+        if node.right == None:
+            node.right = Node(p, None, None, (split + 1) % dim)
+        else:
+            insert(node.right, p)
+        if node.right.count > alpha * node.count:
+            rebuild(node)
+
+def rebuild(node):
+    points = []
+    pre_order_traversal(node, points) # 先根遍历，把子树上的节点全找出来
+    node = make_tree(points)
+    
+def pre_order_traversal(node, points):
+    if node == None:
+        return
+    points.append(node.value)
+    pre_order_traversal(node.left, points)
+    pre_order_traversal(node.right, points)
+```
+
+以上就实现了KD-Tree的构建、搜索、增加节点操作，完整C++程序见：
+
+[https://gitee.com/ghowoght/kd-tree/blob/master/include/kdtree.hpp](https://gitee.com/ghowoght/kd-tree/blob/master/include/kdtree.hpp)
