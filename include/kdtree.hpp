@@ -41,7 +41,7 @@ class KDTree{
 private:
     int dim;
     KDNodePtr root = nullptr;
-    double alpha = 0.8; // 不平衡度阈值，超过这个阈值就拍平重建
+    double alpha = 0.6; // 不平衡度阈值，超过这个阈值就拍平重建
 
 public:
     KDTree()  = default;
@@ -131,7 +131,7 @@ private:
                 insert(node->left, node_new);
             }
             if(node->left->count > alpha * node->count){ // 不平衡，拍平重建
-                flat_rebuild(node);
+                rebuild(node);
             }
         }
         else{
@@ -142,13 +142,13 @@ private:
                 insert(node->right, node_new);
             }
             if(node->right->count > alpha * node->count){ // 不平衡，拍平重建
-                flat_rebuild(node);
+                rebuild(node);
             }
         }
 
     }
 
-    void flat_rebuild(KDNodePtr& node){
+    void rebuild(KDNodePtr& node){
         std::vector<point_t> points;
         pre_order_traversal(node, points);
 
