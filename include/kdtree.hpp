@@ -112,6 +112,66 @@ public:
 
         return best->point;
     }
+
+    std::vector<point_t> get_range(point_t& point, double r){
+        std::vector<point_t> bests;
+        auto best = root;
+        auto next = root;
+        
+        auto best_dist = get_distance(point, best->point);
+        std::vector<KDNodePtr> near_nodes;
+
+        // 搜索函数：以二分搜索的方式从当前节点搜索到叶子节点
+        auto search_to_leaf = [&](KDNodePtr& next){
+            while(next != nullptr){
+                near_nodes.push_back(next);
+                auto next_dist = get_distance(point, next->point);
+                if(next_dist < r){
+                    if(next_dist < best_dist){
+                        best = next;
+                        best_dist = next_dist;
+                    }
+                    bests.push_back(next->point);
+                }
+                if(point[next->split] <= next->point[next->split])
+                    next = next->left;
+                else next = next->right;
+            }
+        };
+
+        // 从根节点往下搜寻，直到找到叶子节点
+        search_to_leaf(next);
+        
+        // 回溯
+        while(near_nodes.size() != 0){
+            next = *(near_nodes.end() - 1);
+            near_nodes.pop_back();
+            
+            // 判断以查询点为球心的超球面与分割面是否相交
+            if(fabs(point[next->split] - next->point[next->split]) < r){
+                // 相交则需要进入另一分支
+                if(point[next->split] <= next->point[next->split])
+                    next = next->right;
+                else next = next->left;
+                // 对另一子树进行搜寻，直到找到叶子节点
+                search_to_leaf(next);
+            }
+        }
+
+        return bests;
+    }
+
+    std::vector<point_t> get_range_linear(point_t& point, double r, std::vector<point_t> points){
+        std::vector<point_t> bests;
+        for(auto& p : points){
+            auto curr_dist = get_distance(point, p);
+            if(curr_dist < r){
+                bests.push_back(p);
+            }
+        }
+        return bests;
+
+    }
     void insert(point_t& point){ // 使用替罪羊树的方法动态插入节点
         dim = point.size();
         auto node_new = std::make_shared<KDNode>(point, 0, nullptr, nullptr);

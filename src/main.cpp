@@ -42,15 +42,31 @@ int main(int argc, char** argv){
     std::cout << "----------- kdtree search -----------" << std::endl;
     startTime = clock();
     auto nearest = kdtree.get_nearest(point);
-    std::cout << "The run time is: " << get_s(startTime) << "s" << std::endl;
+    std::cout << "The run time is: " << get_s(startTime) << " s" << std::endl;
     std::cout << "nearest: " << nearest[0] << " " << nearest[1] << " " << nearest[2] << std::endl;
 
     std::cout << "----------- linear search -----------" << std::endl;
     startTime = clock();
     nearest = kdtree.get_nearest_linear_search(point, points);
-    std::cout << "The run time is: " << get_s(startTime) << "s" << std::endl;
+    std::cout << "The run time is: " << get_s(startTime) << " s" << std::endl;
     std::cout << "nearest: " << nearest[0] << " " << nearest[1] << " " << nearest[2] << std::endl;
     
+    // 邻域搜索
+    auto r = 0.2; // 搜索半径
+    std::cout << "----------- kdtree search -----------" << std::endl;
+    startTime = clock();
+    auto nears = kdtree.get_range(point, r);
+    std::cout << "The run time is: " << get_s(startTime) << " s" << std::endl;
+    std::cout << "total num: " << nears.size() << std::endl;
+
+    std::cout << "----------- linear search -----------" << std::endl;
+    startTime = clock();
+    nears = kdtree.get_range_linear(point, r, points);
+    std::cout << "The run time is: " << get_s(startTime) << " s" << std::endl;    
+    std::cout << "total num: " << nears.size() << std::endl;
+
+
+
     // kdtree.show_tree();
     return 0;
 }
