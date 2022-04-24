@@ -28,7 +28,6 @@ public:
     point_t point;      
     KDNodePtr left;     // 左子树
     KDNodePtr right;    // 右子树
-    KDNodePtr front;    // 父节点
 public:
     KDNode(point_t& point, int split, KDNodePtr left, KDNodePtr right)
         : point(point), split(split), left(left), right(right), count(0){ }
@@ -144,7 +143,7 @@ public:
         
         // 回溯
         while(near_nodes.size() != 0){
-            next = *(near_nodes.end() - 1);
+            next = near_nodes.back();
             near_nodes.pop_back();
             
             // 判断以查询点为球心的超球面与分割面是否相交
