@@ -46,7 +46,7 @@ public:
     KDTree()  = default;
     ~KDTree() = default;
 
-    KDTree(std::vector<point_t> points){
+    KDTree(std::vector<point_t>& points){
         if(points.size() == 0){
             root = nullptr;
             return;
@@ -56,7 +56,7 @@ public:
         root = make_tree(points.begin(), points.end(), points.size(), 0);
     }
 
-    point_t get_nearest_linear_search(const point_t& point, std::vector<point_t> points){
+    point_t get_nearest_linear_search(const point_t& point, std::vector<point_t>& points){
         auto best = points[0];
         auto best_dist = get_distance(point, best);
         for(auto& p : points){
@@ -160,7 +160,7 @@ public:
         return bests;
     }
 
-    std::vector<point_t> get_range_linear(point_t& point, double r, std::vector<point_t> points){
+    std::vector<point_t> get_range_linear(point_t& point, double r, std::vector<point_t>& points){
         std::vector<point_t> bests;
         for(auto& p : points){
             auto curr_dist = get_distance(point, p);
