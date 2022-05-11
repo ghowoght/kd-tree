@@ -17,10 +17,10 @@
 #include <cmath>
 #include <iostream>
 
-using point_t = std::vector<double>;
-
+template<class T>
 class KDNode{
-using KDNodePtr = std::shared_ptr<KDNode>;
+using KDNodePtr = std::shared_ptr<KDNode<T>>;
+using point_t = std::vector<T>;
 public:
     int dim;            // 维数
     int split;
@@ -34,9 +34,10 @@ public:
 
 };
 
-using KDNodePtr = std::shared_ptr<KDNode>;
-
+template<typename T>
 class KDTree{
+using KDNodePtr = std::shared_ptr<KDNode<T>>;
+using point_t = std::vector<T>;
 private:
     int dim;
     KDNodePtr root = nullptr;
@@ -223,8 +224,8 @@ private:
     }
 
 private:
-    KDNodePtr make_tree(const std::vector<point_t>::iterator& begin,
-                        const std::vector<point_t>::iterator& end,
+    KDNodePtr make_tree(const typename std::vector<point_t>::iterator& begin,
+                        const typename std::vector<point_t>::iterator& end,
                         int length,
                         int split)
     {
@@ -235,7 +236,7 @@ private:
 
         int mid = length / 2; // 中位数
 
-        auto node = std::make_shared<KDNode>(
+        auto node = std::make_shared<KDNode<T>>(
                         *(begin + mid),
                         split,
                         make_tree(begin, begin + mid, mid - 1, (split + 1) % dim),
@@ -245,8 +246,8 @@ private:
         return node;
     }
 
-    inline double get_distance(const point_t& a, const point_t& b){
-        double sum = 0;
+    inline T get_distance(const point_t& a, const point_t& b){
+        T sum = 0;
         for(int i = 0; i < dim; i++){
             sum += (a[i] - b[i]) * (a[i] - b[i]);
         }
