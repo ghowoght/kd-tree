@@ -41,7 +41,7 @@ using point_t = std::vector<T>;
 private:
     int dim;
     KDNodePtr root = nullptr;
-    double alpha = 0.6; // 不平衡度阈值，超过这个阈值就拍平重建
+    double alpha = 0.7; // 不平衡度阈值，超过这个阈值就拍平重建
 
 public:
     KDTree()  = default;
