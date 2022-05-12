@@ -174,7 +174,7 @@ public:
     }
     void insert(point_t& point){ // 使用替罪羊树的方法动态插入节点
         dim = point.size();
-        auto node_new = std::make_shared<KDNode>(point, 0, nullptr, nullptr);
+        auto node_new = std::make_shared<KDNode<T>>(point, 0, nullptr, nullptr);
         if(root == nullptr)
             root = node_new;
         else
