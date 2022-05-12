@@ -232,9 +232,12 @@ private:
         if(begin == end) return nullptr;
 
         // 按照指定split进行排序(升序)
-        std::sort(begin, end, [split](point_t& a, point_t& b){ return a[split] < b[split]; });
+        if(length < 100000) // 测试发现数量较少时用stl库会比较快
+            std::sort(begin, end, [split](point_t& a, point_t& b){ return a[split] < b[split]; });
+        else
+            quick_sort(begin, end, length, split);
 
-        int mid = length / 2; // 中位数
+        int mid = length / 2; // 中位数索引
 
         auto node = std::make_shared<KDNode<T>>(
                         *(begin + mid),
@@ -242,16 +245,66 @@ private:
                         make_tree(begin, begin + mid, mid - 1, (split + 1) % dim),
                         make_tree(begin + mid + 1, end, length - mid - 1, (split + 1) % dim)
                         );
-        node->count = length;
+        node->count = length - 1;
         return node;
     }
 
-    inline T get_distance(const point_t& a, const point_t& b){
+    inline double get_distance(const point_t& a, const point_t& b){
         T sum = 0;
         for(int i = 0; i < dim; i++){
             sum += (a[i] - b[i]) * (a[i] - b[i]);
         }
         return sqrt(sum);
+    }
+
+    void quick_sort(const typename std::vector<point_t>::iterator& begin,
+                    const typename std::vector<point_t>::iterator& end, 
+                    int low, 
+                    int high, 
+                    int split, 
+                    int midIdx, 
+                    bool& flag)
+    {
+        // 分治lambda表达式
+        auto paritition = [](const typename std::vector<point_t>::iterator& begin,
+                            const typename std::vector<point_t>::iterator& end, 
+                            int low, 
+                            int high, 
+                            int split
+        ){    
+            auto pivot = *(begin + low);
+            while(low < high){
+                while(low < high && (*(begin + high))[split] >= pivot[split])
+                    high--;
+                *(begin + low) = *(begin + high);
+                while(low < high && (*(begin + low))[split] < pivot[split])
+                    low++;
+                *(begin + high) = *(begin + low);
+            }
+            *(begin + low) = pivot;
+            return low;
+        };
+
+        if(low < high && !flag){
+            auto pivot = paritition(begin, end, low, high, split);
+            if(pivot == midIdx){
+                flag = true;
+                return;
+            }
+            quick_sort(begin, end, low, pivot - 1, split, midIdx, flag);
+            quick_sort(begin, end, pivot + 1, high, split, midIdx, flag);
+        }
+    }
+
+    // 使用快速排序将原始数据分成左右两组，并返回中点
+    point_t quick_sort(const typename std::vector<point_t>::iterator& begin,
+                        const typename std::vector<point_t>::iterator& end, 
+                        int length,
+                        int split)
+    {
+        bool flag = false;
+        quick_sort(begin, end, 0, length - 1, split, length / 2, flag);
+        return *(begin + length / 2);
     }
 
 public:
