@@ -3,12 +3,13 @@
 #include <vector>
 #include <algorithm>
 
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+
 #define SAMPLE_NUM 1000000
 #define INSERT_NUM 100000
 
-using data_type = double;
-using point_t = std::vector<data_type>;
-
+using data_type = float;
 inline data_type rand_mimx(data_type min, data_type max){
     auto x = rand();
     return min + x / (RAND_MAX * 1.0) * (max - min);
@@ -19,29 +20,38 @@ inline double get_s(clock_t start){
 
 int main(int argc, char** argv){
 
+    PointCloud::Ptr cloud(new PointCloud);
+    cloud->height = 1;
+    cloud->width = SAMPLE_NUM;
+    cloud->points.resize(cloud->width * cloud->height);
+
     srand(time(NULL));
 
-    std::vector<point_t> points;
-    for(int i = 0; i < SAMPLE_NUM; i++)
-        points.push_back(point_t{rand_mimx(0, 1), rand_mimx(0, 1), rand_mimx(0, 1)});
+    for(int i = 0; i < SAMPLE_NUM; i++){
+        (*cloud)[i].x = rand_mimx(0, 1);
+        (*cloud)[i].y = rand_mimx(0, 1);
+        (*cloud)[i].z = rand_mimx(0, 1);
+    }
 
     // 构建KD-Tree
     auto startTime = clock();
-    KDTree<data_type> kdtree(points);
+    KDTree kdtree(cloud);
     std::cout << SAMPLE_NUM << " points' building time is: " << get_s(startTime) << "s" << std::endl;
     
-    for(int i = 0; i < INSERT_NUM; i++)
-        points.push_back(point_t{rand_mimx(0, 1), rand_mimx(0, 1), rand_mimx(0, 1)});
+    for(int i = 0; i < INSERT_NUM; i++){
+        (*cloud).push_back(PointType(rand_mimx(0, 1), rand_mimx(0, 1), rand_mimx(0, 1)));
+    }
+
     // 插入新节点
     startTime = clock();
-    std::for_each(points.begin() + SAMPLE_NUM, points.end(), [&](point_t& p){
+    std::for_each(cloud->begin() + SAMPLE_NUM, cloud->end(), [&](PointType& p){
         kdtree.insert(p);
     });
     std::cout << INSERT_NUM << "  points' insert time is  : " << get_s(startTime) << "s" << std::endl;
 
     // 待查询点
-    point_t point({rand_mimx(0, 1), rand_mimx(0, 1), rand_mimx(0, 1)});
-    std::cout << "input         : " << point[0] << " " << point[1] << " " << point[2] << std::endl;
+    PointType point(rand_mimx(0, 1), rand_mimx(0, 1), rand_mimx(0, 1));
+    std::cout << "input         : " << point.data[0] << " " << point.data[1] << " " << point.data[2] << std::endl;
     
     //////////// 最近邻搜索
     std::cout << "**********************************" << std::endl;
@@ -51,14 +61,13 @@ int main(int argc, char** argv){
     startTime = clock();
     auto nearest = kdtree.get_nearest(point);
     std::cout << "The run time is: " << get_s(startTime) << " s" << std::endl;
-    std::cout << "nearest: " << nearest[0] << " " << nearest[1] << " " << nearest[2] << std::endl;
+    std::cout << "nearest: " << nearest.data[0] << " " << nearest.data[1] << " " << nearest.data[2] << std::endl;
 
     std::cout << "----------- linear search -----------" << std::endl;
-    std::vector<point_t> points2 = points;
     startTime = clock();
-    nearest = kdtree.get_nearest_linear_search(point, points2);
+    nearest = kdtree.get_nearest_linear_search(point);
     std::cout << "The run time is: " << get_s(startTime) << " s" << std::endl;
-    std::cout << "nearest: " << nearest[0] << " " << nearest[1] << " " << nearest[2] << std::endl;
+    std::cout << "nearest: " << nearest.data[0] << " " << nearest.data[1] << " " << nearest.data[2] << std::endl;
 
     //////////// 邻域搜索
     std::cout << "*********************************" << std::endl;
@@ -73,7 +82,7 @@ int main(int argc, char** argv){
 
     std::cout << "----------- linear search -----------" << std::endl;
     startTime = clock();
-    nears = kdtree.get_range_linear(point, r, points2);
+    nears = kdtree.get_range_linear(point, r);
     std::cout << "The run time is: " << get_s(startTime) << " s" << std::endl;    
     std::cout << "total num: " << nears.size() << std::endl;
 
